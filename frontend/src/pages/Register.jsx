@@ -6,8 +6,11 @@ import {
   Box,
   Typography,
   Paper,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material'
+
 import api from '../services/api'
 
 export default function Register() {
@@ -15,6 +18,8 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const navigate = useNavigate()
 
@@ -30,11 +35,23 @@ export default function Register() {
         password
       })
 
-      alert('Conta criada com sucesso!')
-      navigate('/')
+      setSuccess('Conta criada com sucesso!')
+      
+      setTimeout(() => {
+        navigate('/')
+      }, 1200)
 
     } catch (err) {
-      alert(err.response?.data?.error || 'Registration failed')
+      const message = err.response?.data?.error
+
+      if (message === 'Email already exists') {
+        setError('Este e-mail já está cadastrado')
+      } else if (message === 'Password is too weak') {
+        setError('Senha muito fraca. Use letras e números.')
+      } else {
+        setError('Erro ao criar conta')
+      }
+
     } finally {
       setLoading(false)
     }
@@ -104,19 +121,11 @@ export default function Register() {
             `}
           </style>
 
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            gutterBottom
-          >
+          <Typography variant="h5" fontWeight={700} gutterBottom>
             Criar Conta
           </Typography>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            mb={2}
-          >
+          <Typography variant="body2" color="text.secondary" mb={2}>
             Preencha os dados para acessar o RepoVision
           </Typography>
 
@@ -157,30 +166,19 @@ export default function Register() {
                 borderRadius: 2,
                 textTransform: 'none',
                 fontWeight: 600,
-                background:
-                  'linear-gradient(90deg, #2a2cba, #4b07e9)',
-                '&:hover': {
-                  opacity: 0.9
-                }
+                background: 'linear-gradient(90deg, #2a2cba, #4b07e9)',
+                '&:hover': { opacity: 0.9 }
               }}
             >
               {loading ? (
-                <CircularProgress
-                  size={22}
-                  sx={{ color: '#fff' }}
-                />
+                <CircularProgress size={22} sx={{ color: '#fff' }} />
               ) : (
                 'Cadastrar'
               )}
             </Button>
           </form>
 
-          <Box
-            sx={{
-              mt: 3,
-              textAlign: 'center'
-            }}
-          >
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2">
               Já possui conta?{' '}
               <Link
@@ -197,6 +195,38 @@ export default function Register() {
           </Box>
         </Paper>
       </Box>
+
+      {/* SNACKBAR ERRO */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={4000}
+        onClose={() => setError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          severity="error"
+          variant="filled"
+          onClose={() => setError('')}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      {/* SNACKBAR SUCCESS */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={2500}
+        onClose={() => setSuccess('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setSuccess('')}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

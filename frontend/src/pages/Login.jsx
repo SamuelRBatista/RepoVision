@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   TextField,
   Button,
-  Container,
   Box,
   Typography,
   Paper,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material'
+
 import api from '../services/api'
 import AuthContext from '../contexts/AuthContext'
 
@@ -16,19 +18,40 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const { setToken } = useContext(AuthContext)
   const navigate = useNavigate()
 
   const submit = async (e) => {
     e.preventDefault()
+
     try {
       setLoading(true)
-      const { data } = await api.post('/auth/login', { email, password })
+
+      const { data } = await api.post('/auth/login', {
+        email,
+        password
+      })
+
       setToken(data.token)
       navigate('/dashboard')
+
     } catch (err) {
-      alert(err.response?.data?.error || 'Login failed')
+      const message = err.response?.data?.error
+
+      if (
+        message === 'Email and password are required'
+      ) {
+        setError('Informe e-mail e senha para continuar')
+      } else if (
+        message === 'Invalid credentials'
+      ) {
+        setError('E-mail ou senha inválidos')
+      } else {
+        setError('Falha ao realizar login')
+      }
+
     } finally {
       setLoading(false)
     }
@@ -43,7 +66,7 @@ export default function Login() {
       }}
     >
 
-      {/* LADO ESQUERDO (branding) */}
+      {/* LADO ESQUERDO */}
       <Box
         sx={{
           flex: 1,
@@ -63,7 +86,7 @@ export default function Login() {
         </Typography>
       </Box>
 
-      {/* LADO DIREITO (form) */}
+      {/* LADO DIREITO */}
       <Box
         sx={{
           flex: 1,
@@ -80,11 +103,9 @@ export default function Login() {
             borderRadius: 4,
             backdropFilter: 'blur(10px)',
             backgroundColor: 'rgba(255,255,255,0.9)',
-            transform: 'translateY(0)',
             animation: 'fadeIn 0.6s ease'
           }}
         >
-
           <style>
             {`
               @keyframes fadeIn {
@@ -137,7 +158,11 @@ export default function Login() {
                 }
               }}
             >
-              {loading ? <CircularProgress size={22} sx={{ color: 'white' }} /> : 'Entrar'}
+              {loading ? (
+                <CircularProgress size={22} sx={{ color: '#fff' }} />
+              ) : (
+                'Entrar'
+              )}
             </Button>
           </form>
 
@@ -153,9 +178,28 @@ export default function Login() {
               Criar conta
             </Link>
           </Box>
-
         </Paper>
       </Box>
+
+      {/* SNACKBAR DE ERRO */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={4000}
+        onClose={() => setError('')}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right'
+        }}
+      >
+        <Alert
+          severity="error"
+          variant="filled"
+          onClose={() => setError('')}
+          sx={{ fontWeight: 500 }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
